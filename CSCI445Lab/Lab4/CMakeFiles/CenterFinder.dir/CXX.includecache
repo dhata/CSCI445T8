@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/pi/Lab4/centerfinder.cpp
+stdio.h
+-
+stdlib.h
+-
+wiringPi.h
+/home/pi/Lab4/wiringPi.h
+string
+-
+sstream
+-
+

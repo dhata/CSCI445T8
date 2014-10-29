@@ -1,0 +1,1 @@
+/usr/bin/c++       CMakeFiles/CenterFinder.dir/centerfinder.cpp.o  -o CenterFinder -rdynamic -lwiringPi 

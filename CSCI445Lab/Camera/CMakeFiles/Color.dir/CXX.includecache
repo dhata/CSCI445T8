@@ -1,0 +1,26 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/pi/Camera/camcv.cpp
+iostream
+-
+opencv2/highgui/highgui.hpp
+/home/pi/Camera/opencv2/highgui/highgui.hpp
+opencv2/imgproc/imgproc.hpp
+/home/pi/Camera/opencv2/imgproc/imgproc.hpp
+stdio.h
+-
+stdlib.h
+-
+string
+-
+sstream
+-
+wiringPi.h
+/home/pi/Camera/wiringPi.h
+
