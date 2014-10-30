@@ -1,4 +1,4 @@
-CSCI445T8
+CSCI445 Final Project
 =========
 
 Team 8
