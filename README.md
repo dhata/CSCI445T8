@@ -1,9 +1,7 @@
-CSCI445 Final Project
+CSCI445 Final Project Team 8
 =========
 
-Team 8
-
-Nora Ayanian
+Prof. Nora Ayanian
 
 TA: Joseph Chen
 
