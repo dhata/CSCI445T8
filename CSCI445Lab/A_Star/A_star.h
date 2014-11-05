@@ -300,7 +300,7 @@ string pathFind( const int & xStart, const int & yStart,
     return ""; // no route found
 }
 
-int main()
+/*int main()
 {
     
     srand(time(NULL));
@@ -418,4 +418,4 @@ int main()
     }
     getchar(); // wait for a (Enter) keypress
     return(0);
-}
+}*/
