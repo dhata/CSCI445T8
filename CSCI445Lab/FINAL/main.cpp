@@ -10,6 +10,7 @@
 #include <opencv2/legacy/legacy.hpp>
 #include <opencv/highgui.h>
 #include <opencv/cv.h>
+#include "opencv2/imgproc/imgproc.hpp"
 
 //Motor imports
 #include <stdio.h>
@@ -35,6 +36,7 @@
 
 //namespaces
 using namespace std;
+using namespace cv;
 
 //define pin 5 as the Sonar pin
 #define SONAR_PIN 5
@@ -49,9 +51,10 @@ void move(string, string, string, string);
 void stop(int);
 void driveForward(int);
 void turnCW(int);
-void turn CCW(int);
+void turnCCW(int);
 void selectDevice(int, int, char*);
-void writeToDevice(fd, reg, val);
+void writeToDevice(int, int, int);
+void moveNumBlocks(int);
 double getAngle();
 void turnToAngle(int);
 
@@ -116,16 +119,16 @@ void driveForward(int time){
     stop(time);
 }
 
-void turnCW(int time){
-    fprintf(fp, "0=160\n"); 
-    fprintf(fp, "1=160\n"); 
-    fprintf(fp, "2=160\n"); 
-    fprintf(fp, "3=160\n");        
+void turnCCW(int time){
+    fprintf(fp, "0=145\n"); 
+    fprintf(fp, "1=145\n"); 
+    fprintf(fp, "2=145\n"); 
+    fprintf(fp, "3=145\n");        
     fflush(fp);
     stop(time);
 }
 
-void turnCCW(int time){
+void turnCW(int time){
 	fprintf(fp, "0=160\n"); 
     fprintf(fp, "1=160\n"); 
     fprintf(fp, "2=160\n"); 
@@ -178,20 +181,179 @@ double getAngle(){
 		usleep(600 * 1000); 
 	} 
 }
-
+void moveNumBlocks(int blocks)
+{
+	int distanceInCentimeters = blocks*30;
+	double millisecondsPerCentimeter = 72.6666666667;
+	int convertedDriveTime = (int)(distanceInCentimeters * millisecondsPerCentimeter);
+	driveForward(convertedDriveTime);
+}
 //turn to compass angle
 void turnToAngle(int desiredAngle){
 	double measuredAngle = getAngle();
 	int realAngle = (int) ((measuredAngle * -1) + 150);
 	realAngle = realAngle % 360;
 
-	while (abs(realAngle-desiredAngle) > 6){
+	cout<<"angle is"<<realAngle<<endl;
+	cout<<"goal angle is "<<desiredAngle<<endl;
+
+
+if(desiredAngle<realAngle){
+	if(abs(realAngle-desiredAngle)>180)
+	{
+		while (abs(realAngle-desiredAngle) > 6){
 		turnCW(100);
-		stop(250);
+		stop(50);
 		measuredAngle = getAngle();
-		realAngle = (int) ((measuredAngle * -1) + 150);
+		realAngle = (int) ((measuredAngle * -1) + 166);
 		realAngle = realAngle % 360;
+		}
 	}
+	else{
+		while (abs(realAngle-desiredAngle) > 6){
+		turnCCW(100);
+		stop(50);
+		measuredAngle = getAngle();
+		realAngle = (int) ((measuredAngle * -1) + 166);
+		realAngle = realAngle % 360;
+		}
+
+	}
+}
+else{
+	if(abs(realAngle-desiredAngle)>180)
+	{
+		while (abs(realAngle-desiredAngle) > 6){
+		turnCCW(100);
+		stop(50);
+		measuredAngle = getAngle();
+		realAngle = (int) ((measuredAngle * -1) + 166);
+		realAngle = realAngle % 360;
+		}
+	}
+	else{
+		while (abs(realAngle-desiredAngle) > 6){
+		turnCW(100);
+		stop(50);
+		measuredAngle = getAngle();
+		realAngle = (int) ((measuredAngle * -1) + 166);
+		realAngle = realAngle % 360;
+		}
+
+	}
+	}
+
+	cout<<"angle is"<<measuredAngle<<endl;
+	
+}
+
+int whichColor()
+{
+	VideoCapture cap(0); //capture the video from webcam
+	stop (100);
+    if ( !cap.isOpened() )  // if not success, exit program
+    {
+         cout << "Cannot open the web cam" << endl;
+         return -1;
+    }
+
+    cap.set(CV_CAP_PROP_FRAME_WIDTH, 160);
+	cap.set(CV_CAP_PROP_FRAME_HEIGHT, 120);
+
+	 namedWindow("Control", CV_WINDOW_AUTOSIZE);
+
+
+	int iLowS = 150; 
+ 	int iHighS = 255;
+
+ 	int iLowV = 60;
+ 	int iHighV = 255;
+
+
+ 	int iLowGreenH=155;
+	int iHighGreenH=165;
+
+ 	int iLowRedH = 170;
+ 	int iHighRedH = 179;
+
+
+ 	
+
+ 	Mat imgTmp;
+    imgTmp = Mat::zeros(301, 301, CV_8UC3);
+
+
+    cap.read(imgTmp); 
+
+    // while (true)
+   // {
+        Mat imgOriginal;
+
+        bool bSuccess = cap.read(imgOriginal); // read a new frame from video
+
+
+
+         if (!bSuccess) //if not success, break loop
+        {
+             cout << "Cannot read a frame from video stream" << endl;
+             //break;
+        }
+
+    Mat imgHSV;
+
+   cvtColor(imgOriginal, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
+ 
+  Mat imgRedThresholded, imgGreenThresholded;
+
+
+   inRange(imgHSV,Scalar(iLowGreenH, iLowS, iLowV), Scalar(iHighGreenH, iHighS, iHighV), imgGreenThresholded);
+ 
+ 	erode(imgGreenThresholded, imgGreenThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+  dilate( imgGreenThresholded, imgGreenThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) ); 
+
+   //morphological closing (removes small holes from the foreground)
+  dilate( imgGreenThresholded, imgGreenThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) ); 
+  erode(imgGreenThresholded, imgGreenThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+
+   Moments oGreenMoments = moments(imgGreenThresholded);
+ double dGreenArea = oGreenMoments.m00;
+ 	 
+
+   
+   inRange(imgHSV, Scalar(iLowRedH, iLowS, iLowV), Scalar(iHighRedH, iHighS, iHighV), imgRedThresholded);
+
+
+//morphological opening (removes small objects from the foreground)
+   erode(imgRedThresholded, imgRedThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+  dilate( imgRedThresholded, imgRedThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) ); 
+
+   //morphological closing (removes small holes from the foreground)
+  dilate( imgRedThresholded, imgRedThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) ); 
+  erode(imgRedThresholded, imgRedThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+
+//morphological opening (removes small objects from the foreground)
+ 
+
+//Calculate the moments of the thresholded image
+   Moments oRedMoments = moments(imgRedThresholded);
+
+
+  double dRedArea = oRedMoments.m00;
+ 
+
+  cout<<dRedArea<<endl;
+  cout<<dGreenArea<<endl;
+  
+  if(dRedArea>75000)
+  {
+  	return 1;
+  }
+  if(dGreenArea>75000)
+	{
+		return 2;
+	} 
+
+	return 0;
 }
 
 int main(int argc, char** argv){
@@ -202,6 +364,23 @@ int main(int argc, char** argv){
 		printf("Error opening file\n");
 		exit(0);
 	}
+
+	cout<<"Found color "<<whichColor()<<endl;
+	//moveNumBlocks(1);
+
+	/*turnCW(3000);
+	//turnCCW(3000);*/
+	// turnToAngle(180	);
+	// //turnToAngle(90);
+	// moveNumBlocks(2);
+	// //turnToAngle(90);
+	// turnToAngle(180);
+	// turnToAngle(90);
+	// moveNumBlocks(2);
+	// turnToAngle(90);
+	// turnToAngle(180);
+
+
 	//stop any residual servo motors
 	stop (100);
 	
