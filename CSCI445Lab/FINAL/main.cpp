@@ -194,8 +194,8 @@ void turnToAngle(int desiredAngle){
 	int realAngle = (int) ((measuredAngle * -1) + 150);
 	realAngle = realAngle % 360;
 
-	cout<<"angle is"<<realAngle<<endl;
-	cout<<"goal angle is "<<desiredAngle<<endl;
+	// cout<<"angle is"<<realAngle<<endl;
+	// cout<<"goal angle is "<<desiredAngle<<endl;
 
 
 if(desiredAngle<realAngle){
@@ -243,12 +243,11 @@ else{
 	}
 	}
 
-	cout<<"angle is"<<measuredAngle<<endl;
+	//cout<<"angle is"<<measuredAngle<<endl;
 	
 }
 
-int whichColor()
-{
+int lookAndSeeColor(){
 	VideoCapture cap(0); //capture the video from webcam
 	stop (100);
     if ( !cap.isOpened() )  // if not success, exit program
@@ -257,12 +256,6 @@ int whichColor()
          return -1;
     }
 
-    cap.set(CV_CAP_PROP_FRAME_WIDTH, 160);
-	cap.set(CV_CAP_PROP_FRAME_HEIGHT, 120);
-
-	 namedWindow("Control", CV_WINDOW_AUTOSIZE);
-
-
 	int iLowS = 150; 
  	int iHighS = 255;
 
@@ -270,24 +263,26 @@ int whichColor()
  	int iHighV = 255;
 
 
- 	int iLowGreenH=155;
-	int iHighGreenH=165;
+ 	int iLowBlueH=0;
+	int iHighBlueH=5;
 
- 	int iLowRedH = 170;
- 	int iHighRedH = 179;
+ 	int iLowRedH = 90;
+ 	int iHighRedH = 95;
 
+    cap.set(CV_CAP_PROP_FRAME_WIDTH, 160);
+	cap.set(CV_CAP_PROP_FRAME_HEIGHT, 120);
 
- 	
+	 namedWindow("Control", CV_WINDOW_AUTOSIZE);
 
- 	Mat imgTmp;
+	 Mat imgTmp;
     imgTmp = Mat::zeros(301, 301, CV_8UC3);
 
 
     cap.read(imgTmp); 
 
-    // while (true)
-   // {
+    
         Mat imgOriginal;
+
 
         bool bSuccess = cap.read(imgOriginal); // read a new frame from video
 
@@ -301,22 +296,22 @@ int whichColor()
 
     Mat imgHSV;
 
-   cvtColor(imgOriginal, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
+   	cvtColor(imgOriginal, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
  
-  Mat imgRedThresholded, imgGreenThresholded;
+  	Mat imgRedThresholded, imgBlueThresholded;
 
 
-   inRange(imgHSV,Scalar(iLowGreenH, iLowS, iLowV), Scalar(iHighGreenH, iHighS, iHighV), imgGreenThresholded);
+   	inRange(imgHSV,Scalar(iLowBlueH, iLowS, iLowV), Scalar(iHighBlueH, iHighS, iHighV), imgBlueThresholded);
  
- 	erode(imgGreenThresholded, imgGreenThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
-  dilate( imgGreenThresholded, imgGreenThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) ); 
+ 	erode(imgBlueThresholded, imgBlueThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+  dilate( imgBlueThresholded, imgBlueThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) ); 
 
    //morphological closing (removes small holes from the foreground)
-  dilate( imgGreenThresholded, imgGreenThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) ); 
-  erode(imgGreenThresholded, imgGreenThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+  dilate( imgBlueThresholded, imgBlueThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) ); 
+  erode(imgBlueThresholded, imgBlueThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
 
-   Moments oGreenMoments = moments(imgGreenThresholded);
- double dGreenArea = oGreenMoments.m00;
+   Moments oBlueMoments = moments(imgBlueThresholded);
+ double dBlueArea = oBlueMoments.m00;
  	 
 
    
@@ -339,21 +334,62 @@ int whichColor()
 
 
   double dRedArea = oRedMoments.m00;
- 
 
-  cout<<dRedArea<<endl;
-  cout<<dGreenArea<<endl;
-  
-  if(dRedArea>75000)
+  if(dRedArea>20000)
   {
   	return 1;
   }
-  if(dGreenArea>75000)
-	{
-		return 2;
-	} 
+  if(dBlueArea>20000)
+  {
+  	return 2;
+  }
+ 	return 0;
+}
+int whichColorTurning()
+{
+	
 
-	return 0;
+	int currentAngle =	 (int) ((getAngle() * -1) + 150);
+	currentAngle = currentAngle % 360;
+
+
+
+ 	int currentColor = lookAndSeeColor();
+
+ 	if(currentColor!=0){
+ 		turnToAngle(currentAngle);
+ 		return currentColor;
+ 	}
+
+ 	turnCCW(200);
+
+ 	for(int i=0; i<4; i++){
+ 		currentColor=lookAndSeeColor();
+
+ 		if(currentColor!=0){
+ 			turnToAngle(currentAngle);
+ 			return currentColor;
+ 		}
+
+ 		turnCW(100);
+
+ 	}
+
+
+ 	turnToAngle(currentAngle);
+ 	return 0;
+ 	
+
+  // cout<<"For "<<i<<" "<<dRedArea<<endl;
+  //cout<<dGreenArea<<endl;
+ //  if(dRedArea>75000)
+ //  {
+ //  	return 1;
+ //  }
+ //  if(dGreenArea>75000)
+	// {
+	// 	return 2;
+	// } 
 }
 
 int main(int argc, char** argv){
@@ -365,7 +401,7 @@ int main(int argc, char** argv){
 		exit(0);
 	}
 
-	cout<<"Found color "<<whichColor()<<endl;
+	cout<<"Found color "<<whichColorTurning()<<endl;
 	//moveNumBlocks(1);
 
 	/*turnCW(3000);
