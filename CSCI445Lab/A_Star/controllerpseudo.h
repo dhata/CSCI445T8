@@ -19,9 +19,10 @@ while(path>> ss ){
 		angleGoal=0;
 		robotLoc.y++;
 	}
-	for(int i = 0; i<particles.size(); i++){	//direction x+=9 distance needs to be 30
-		moveCircle(img, dir, angle, x, y, particles, main_window, particleShoot, sonarDistance,1SQUARE);
-		//use 1SQUARE as the distance to add to x/y
+	
+	//direction x+=9 distance needs to be 30
+	moveCircle(img, dir, angle, x, y, particles, main_window, particleShoot, sonarDistance,30);
+	//use 1SQUARE as the distance to add to x/y
 		
 	}
 	moveToAngle(angleGoal);
@@ -38,16 +39,43 @@ while(path>> ss ){
 		diffY = y-goalPoint.y;
 		//MOVE IN X DIRECTION FIRST
 		//based on direction facing, and whether diffX,diffY are pos/neg then turn and move very small step
+		if(diffX=0){
+		} else if(diffX>0){
+			turnToAngle(down);
+			angle=down;
+		} else if(diffX<0){
+			turnToAngle(up);
+			angle=up;
+		}
+		
 		//diffX is a pixel, use our scaling to figure out how many seconds to drive
-		turnto some direction
-		move with seconds function
-		moveCircle(img, dir, angle, x, y, particles, main_window, particleShoot, sonarDistance,DIFFX);
+		double convertedX;
+		if(diffX=0){	
+			convertedX=0;
+		} else {
+			convertedX = abs(diffX)*72.6666666667;
+		} 
+		driveForward(convertedX);
+		moveCircle(img, dir, angle, x, y, particles, main_window, particleShoot, sonarDistance,diffX);
+		
 		//MOVE IN Y DIRECTION
-		turn to some direction
-		moveCircle(img, dir, angle, x, y, particles, main_window, particleShoot, sonarDistance,DIFFY);
-		move(seconds)
-		turnToAngle(angleGoal);
-		//measure
+		if(diffY=0){
+		} else if(diffY>0){
+			turnToAngle(left);
+		} else if(diffY<0){
+			turnToAngle(right);
+		}
+		
+		double convertedY;
+		if(diffY=0){
+			convertedY=0;
+		} else {
+			convertedY = abs(diffY)*72.6666666667;
+		}
+		driveForward(convertedY);
+		moveCircle(img, dir, angle, x, y, particles, main_window, particleShoot, sonarDistance,diffY);
+		
+		//remeasure
 		//adjust
 		return;
 	}
